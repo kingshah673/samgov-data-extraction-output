@@ -574,7 +574,77 @@ A Python-based web scraper that extracts procurement opportunities from [SAM.gov
 
 ```
 
-<div style="text-align: center">⁂</div>
+# SAM.gov API Data Collection Documentation
 
-[^1]: https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/63773998/7f679849-c04b-49b3-8771-8f707157d1cd/paste.txt```
+[Previous sections remain unchanged...]
 
+## Data Analysis Tables
+
+### Table 1: Opportunity Metadata Structure
+| Field | Type | Description | Example Value |
+|-------|------|-------------|---------------|
+| `solicitationNumber` | String | Unique identifier for the opportunity | "FA462025QA937" |
+| `type` | String | Procurement type | "k" (contract) |
+| `setAside` | String | Small business designation | "SBA" (Small Business Set-Aside) |
+| `responseDeadline` | ISO Date | Proposal due date | "2025-05-02T10:00:00-07:00" |
+| `archiveDate` | ISO Date | When opportunity auto-archives | "2025-05-17" |
+
+### Table 2: NAICS/PSC Code Reference Data
+| Code Type | Field | Description | Example Value |
+|-----------|-------|-------------|---------------|
+| NAICS | `code` | 6-digit industry code | "335220" |
+| NAICS | `title` | Industry description | "Major Household Appliance Manufacturing" |
+| NAICS | `size` | Business size standard | "6" ($6M revenue cap) |
+| PSC | `code` | 4-digit product code | "7290" |
+| PSC | `name` | Product description | "MISCELLANEOUS HOUSEHOLD...APPLIANCES" |
+
+### Table 3: API Endpoint Summary
+| Endpoint Type | Path | Purpose | Sample Data Returned |
+|--------------|------|---------|----------------------|
+| Opportunity | `/opps/v2/opportunities/{id}` | Get full opportunity details | Title, contacts, dates |
+| Dictionary | `/opps/v2/dictionaries` | Get FAR justification codes | Brand name exceptions |
+| Lookup | `/locationservices/v3/api/naics` | NAICS code details | Industry descriptions |
+| Lookup | `/locationservices/v1/api/psc` | Product service codes | Equipment classifications |
+| System | `/prod/alerts` | SAM.gov notifications | Maintenance schedules |
+
+## Conclusion
+
+This documentation demonstrates successful reverse-engineering of SAM.gov's hidden API endpoints to extract:
+
+1. **Structured Procurement Data**
+   - Complete opportunity details with metadata
+   - Classification codes (NAICS/PSC)
+   - Contact information and deadlines
+   - Full solicitation descriptions
+
+2. **Reference Data**
+   - Federal Acquisition Regulation (FAR) justification codes
+   - Business size standards
+   - Product/service classifications
+
+3. **System Information**
+   - Maintenance schedules
+   - Policy change notifications
+
+**Key Technical Observations:**
+- The API uses RESTful design with JSON responses
+- Data relationships are maintained through embedded objects
+- Pagination is handled via `_links` properties
+- All datetime fields use ISO 8601 format
+
+**Ethical Considerations:**
+✔️ Only public data accessed  
+✔️ No authentication bypass attempted  
+✔️ Respects `robots.txt` directives  
+✔️ Includes rate limiting in implementation
+
+**Potential Applications:**
+- Government contracting opportunity alerts
+- Market research for small businesses
+- Procurement analytics dashboards
+- Federal spending trend analysis
+
+<div align="center">
+⁂<br>
+<small>Documentation generated from SAM.gov API responses • {date}</small>
+</div>
