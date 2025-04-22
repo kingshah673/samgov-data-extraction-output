@@ -1,666 +1,580 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" class="logo" width="120"/>
 
-# Here's a comprehensive, professional README.md file in GitHub Markdown format:
+# SAM.gov Scraper
 
-```markdown
-# SAM.gov Contracting Opportunities Data Pipeline
+A Python-based web scraper that extracts procurement opportunities from [SAM.gov](https://sam.gov/) (System for Award Management) using hidden APIs.
 
-![SAM.gov API Integration](https://img.shields.io/badge/SAM.gov-API-informational?style=flat&logo=government&logoColor=white&color=2bbc8a) 
-![Data Format](https://img.shields.io/badge/Data-JSON/CSV-informational?style=flat&logo=json&logoColor=white&color=blue)
-
-A complete solution for extracting, processing, and analyzing U.S. federal contracting opportunities from SAM.gov.
-
-## Table of Contents
-- [Features](#features)
-- [Data Structure](#data-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Field Reference](#field-reference)
-- [Examples](#examples)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-- [Contact](#contact)
-
-## Features
-
-✔ **Comprehensive Data Extraction**  
-- Full opportunity metadata
-- Attachment processing
-- Historical version tracking
-
-✔ **Advanced Processing**  
-- Automated classification by NAICS/PSC codes
-- Set-aside eligibility analysis
-- Geographic mapping of opportunities
-
-✔ **Output Formats**  
-- JSON (structured)
-- CSV (spreadsheet-ready)
-- XML (legacy system compatible)
-
-✔ **Enterprise Ready**  
-- Rate limiting handling
-- Automatic retries
-- Data validation checks
-
-## Data Structure
-
-### Core Opportunity Object
-
-```json
-{
-  "opportunity": {
-    "metadata": {
-      "noticeId": "string",
-      "title": "string",
-      "type": "enum[Combined Synopsis/Solicitation, Special Notice, etc.]",
-      "status": "enum[Active, Archived, Draft]",
-      "postedDate": "ISO8601",
-      "modifiedDate": "ISO8601",
-      "closeDate": "ISO8601",
-      "archiveDate": "ISO8601"
-    },
-    "classification": {
-      "naics": {
-        "code": "string",
-        "description": "string"
-      },
-      "psc": {
-        "code": "string",
-        "description": "string"
-      },
-      "setAside": "string"
-    },
-    "organization": {
-      "department": "string",
-      "subTier": "string",
-      "office": "string",
-      "location": {
-        "address": "string",
-        "city": "string",
-        "state": "string",
-        "zip": "string",
-        "country": "string"
-      }
-    },
-    "contacts": [
-      {
-        "type": "enum[Primary, Secondary]",
-        "name": "string",
-        "email": "string",
-        "phone": "string",
-        "office": "string"
-      }
-    ],
-    "description": {
-      "content": "string",
-      "amendments": [
-        {
-          "number": "int",
-          "date": "ISO8601",
-          "description": "string"
-        }
-      ]
-    },
-    "attachments": [
-      {
-        "url": "string",
-        "name": "string",
-        "type": "string",
-        "size": "int"
-      }
-    ]
-  }
-}
-```
-
-
-## Installation
-
-### Prerequisites
-
-- Python 3.8+
-- SAM.gov API key ([request here](https://sam.gov/content/opportunities-api))
-
-
-### Setup
-
-```bash
-# Clone repository
-git clone https://github.com/yourrepo/sam-gov-data.git
-cd sam-gov-data
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-.\venv\Scripts\activate   # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API key
-```
-
-
-## Usage
-
-### Basic Extraction
-
-```python
-from sam_gov import SAMClient
-
-client = SAMClient(api_key="your_api_key")
-
-# Get latest opportunities
-opportunities = client.search(
-    posted_from="2025-01-01",
-    limit=100,
-    output_format="json"
-)
-
-# Save to file
-with open("opportunities.json", "w") as f:
-    json.dump(opportunities, f, indent=2)
-```
-
-
-### Advanced Filtering
-
-```python
-# Filter by specific criteria
-filtered = client.search(
-    naics="541511",
-    set_aside=["SBA", "8A"],
-    deadline_after="2025-05-01",
-    sort_by="closeDate:asc"
-)
-```
-
-
-## API Documentation
-
-### Endpoints
-
-| Method | Endpoint | Description |
-| :-- | :-- | :-- |
-| `GET` | `/v1/opportunities` | Search opportunities |
-| `GET` | `/v1/opportunities/{id}` | Get specific opportunity |
-| `GET` | `/v1/historical/{id}` | Get version history |
-
-### Rate Limits
-
-- 60 requests/minute
-- 5,000 requests/day
-
-
-## Field Reference
-
-### Key Fields
-
-| Field | Type | Description | Sample |
-| :-- | :-- | :-- | :-- |
-| `noticeId` | String | Unique identifier | `F1250525U0203` |
-| `title` | String | Opportunity title | `FY25 IT Support Services` |
-| `type` | Enum | Notice type | `Combined Synopsis/Solicitation` |
-| `naics.code` | String | 6-digit NAICS | `541511` |
-| `psc.code` | String | 4-digit PSC | `D302` |
-| `setAside` | String | Contract preference | `8(a) Set-Aside` |
-
-### Date Fields
-
-All dates follow ISO 8601 format with timezone:
-
-- `2025-04-22T14:30:00-04:00` (EDT)
-- `2025-04-22T18:30:00Z` (UTC)
-
-
-## Examples
-
-### JSON Output Example
-
-```json
-{
-  "noticeId": "F1250525U0203",
-  "title": "Cybersecurity Support Services",
-  "type": "Combined Synopsis/Solicitation",
-  "postedDate": "2025-04-15T08:00:00-04:00",
-  "closeDate": "2025-05-15T17:00:00-04:00",
-  "classification": {
-    "naics": {
-      "code": "541511",
-      "description": "Custom Computer Programming Services"
-    },
-    "psc": {
-      "code": "D302",
-      "description": "IT and Telecom - Support Services"
-    }
-  }
-}
-```
-
-
-### CSV Output Example
-
-```csv
-noticeId,title,type,postedDate,closeDate,naicsCode,naicsDesc,pscCode,pscDesc
-F1250525U0203,Cybersecurity Support Services,Combined Synopsis/Solicitation,2025-04-15T08:00:00-04:00,2025-05-15T17:00:00-04:00,541511,Custom Computer Programming Services,D302,IT and Telecom - Support Services
-```
-
-
-## Troubleshooting
-
-### Common Issues
-
-**API Limit Reached**
-
-```python
-try:
-    response = client.search(...)
-except RateLimitError as e:
-    print(f"Rate limit exceeded. Retry after {e.retry_after} seconds")
-```
-
-**Authentication Failure**
-Verify:
-
-1. API key is valid
-2. Key is properly set in `.env`
-3. No trailing whitespace in key
-
-**Data Parsing Errors**
-Enable debug mode:
-
-```python
-client = SAMClient(debug=True)
-```
-
-
-## License
-
-This project is not affiliated with the U.S. General Services Administration (GSA). SAM.gov data is public domain.
-
-```
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
-[Include full license text]
-```
-
-
-## Contact
-
-For professional inquiries and custom development:
-
-- Email: [hasnain.abbas32@outlook.com](mailto:hasnain.abbas32@outlook.com)
-- Alternate: [kingshah673@gmail.com](mailto:kingshah673@gmail.com)
-- GitHub Issues: [https://github.com/yourrepo/issues](https://github.com/yourrepo/issues)
-
----
-
-![Data Flow Diagram](https://example.com/path/to/diagram.png)
-*Figure 1: SAM.gov Data Pipeline Architecture*
-
-```
-
-This README includes:
-
-1. Professional headers and badges
-2. Comprehensive table of contents
-3. Detailed JSON schema documentation
-4. Installation and usage instructions
-5. API reference section
-6. Field specifications with examples
-7. Troubleshooting guide
-8. Proper licensing information
-9. Multiple contact methods
-
-The markdown is formatted for optimal GitHub rendering while maintaining professional technical documentation standards. Would you like me to add any specific sections such as:
-- Data retention policies
-- Storage requirements
-- Advanced query examples
-- Integration with other government APIs?
-
-
-
-write it in a better way for github readme.md format so that I can directly copy and paste it
-
-```markdown
-# SAM.gov Contracting Opportunities Data Pipeline
-
-![SAM.gov API Integration](https://img.shields.io/badge/SAM.gov-API-informational?style=flat&amp;logo=government&amp;logoColor=white&amp;color=2bbc8a) 
-![Data Format](https://img.shields.io/badge/Data-JSON/CSV-informational?style=flat&amp;logo=json&amp;logoColor=white&amp;color=blue)
-
-A complete solution for extracting, processing, and analyzing U.S. federal contracting opportunities from SAM.gov.
-
----
-
-## Table of Contents
-- [Features](#features)
-- [Data Structure](#data-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Field Reference](#field-reference)
-- [Examples](#examples)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-- [Contact](#contact)
+**Developer**: Syed Hasnain Abbas  
+**Email**: hasnain.abbas32@outlook.com | kingshha673@gmail.com  
+**GitHub**: [kingshah673](https://github.com/kingshah673/)
 
 ---
 
 ## Features
+- Extracts opportunity data from SAM.gov's hidden APIs
+- Parses JSON responses into structured data
+- Handles pagination and multiple API endpoints
+- Outputs clean, formatted results with:
+  - Basic opportunity info (title, dates, IDs)
+  - Classification details (NAICS, PSC, set-asides)
+  - Contact information
+  - Descriptions and attachments
+  - Organizational hierarchy
 
-✔ **Comprehensive Data Extraction**  
-- Full opportunity metadata  
-- Attachment processing  
-- Historical version tracking  
+## Example Output
+```{
+  "set_aside": "Total Small Business Set-Aside (FAR 19.5)",
+  "naics_code": "335220 - Major Household Appliance Manufacturing",
+  "product_service_code": "7290 - MISCELLANEOUS HOUSEHOLD AND COMMERCIAL FURNISHINGS AND APPLIANCES"
+}
+```
 
-✔ **Advanced Processing**  
-- Automated classification by NAICS/PSC codes  
-- Set-aside eligibility analysis  
-- Geographic mapping of opportunities  
+# Classification
+```
+{
+"set_aside": "Total Small Business Set-Aside (FAR 19.5)",
+"naics_code": "335220 - Major Household Appliance Manufacturing",
+"product_service_code": "7290 - MISCELLANEOUS HOUSEHOLD AND COMMERCIAL FURNISHINGS AND APPLIANCES"
+}
 
-✔ **Output Formats**  
-- JSON (structured)  
-- CSV (spreadsheet-ready)  
-- XML (legacy system compatible)  
+```
 
-✔ **Enterprise Ready**  
-- Rate limiting handling  
-- Automatic retries  
-- Data validation checks  
+## API URL: `https://sam.gov/api/prod/watchlistservice/v1/api/toggle/enablecontractdata?random=17453590439571
+## API URL: `https://sam.gov/api/prod/alerts
 
----
+```
 
-## Data Structure
+[
+{
+"alertID": 585,
+"priority": 3,
+"createdDate": "2025-03-08T05:54:54",
+"lastModifiedDate": "2025-03-10T09:04:50",
+"content": {
+"title": "Subaward Reporting is live on SAM.gov",
+"description": "<p>As of March 8th 2025, FSRS.gov has retired, and users should complete all subaward reporting in SAM.gov now.</p><ul><li><p>Find about the transition at <a href='\"http://sam.gov/FSRS\"'><u>SAM.gov/FSRS</u></a>. </p></li><li><p>Find more about managing and searching subawards at <a href='\"https://sam.gov/subaward-reports-help\"'>Subaward Reports</a>.</p></li><li><p>Find more about managing and searching subcontracts at <a href='\"https://sam.gov/subcontract-reports-help\"'>Subcontract Reports.</a></p></li></ul>",
+"severity": "Informational",
+"published": "2025-03-08"
+}
+},
+{
+"alertID": 580,
+"priority": 3,
+"createdDate": "2025-02-11T12:49:37",
+"lastModifiedDate": "2025-04-22T10:52:23",
+"content": {
+"title": "Scheduled SAM Maintenance",
+"description": "<p>SAM.gov will undergo planned maintenance on <strong>Saturday, May 10, 2025</strong> from 8:00 AM to 1:00 PM EST. Users in SAM.gov will be unable to complete Entity Registrations and Exclusions during this window.  Thank you for your understanding.</p>",
+"severity": "Informational",
+"published": "2025-04-22"
+}
+}
+]
 
-### Core Opportunity Object
+```
+
+## API URL: `https://sam.gov/api/prod/opps/v2/dictionaries?random=1745359044516&amp;ids=fo_justification_authority,additional_reporting,ja_statutory_authority,justification_aquisition_authority
 
 ```
 
 {
-"opportunity": {
-"metadata": {
-"noticeId": "string",
-"title": "string",
-"type": "enum[Combined Synopsis/Solicitation, Special Notice, etc.]",
-"status": "enum[Active, Archived, Draft]",
-"postedDate": "ISO8601",
-"modifiedDate": "ISO8601",
-"closeDate": "ISO8601",
-"archiveDate": "ISO8601"
-},
-"classification": {
-"naics": {
-"code": "string",
-"description": "string"
-},
-"psc": {
-"code": "string",
-"description": "string"
-},
-"setAside": "string"
-},
-"organization": {
-"department": "string",
-"subTier": "string",
-"office": "string",
-"location": {
-"address": "string",
-"city": "string",
-"state": "string",
-"zip": "string",
-"country": "string"
-}
-},
-"contacts": [
+"_embedded": {
+"dictionaries": [
 {
-"type": "enum[Primary, Secondary]",
-"name": "string",
-"email": "string",
-"phone": "string",
-"office": "string"
+"elements": [
+{
+"parentElementId": null,
+"elementId": "brand",
+"code": "brand",
+"value": "FAR 6.302-1(c) - Brand name",
+"description": null,
+"active": true,
+"sortIndex": 1,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far1",
+"code": "far1",
+"value": "FAR 6.302-1 - Only one responsible source (except brand name)",
+"description": null,
+"active": true,
+"sortIndex": 2,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far2",
+"code": "far2",
+"value": "FAR 6.302-2 - Unusual and compelling urgency",
+"description": null,
+"active": true,
+"sortIndex": 3,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far3",
+"code": "far3",
+"value": "FAR 6.302-3 - Industrial mobilization; engineering, developmental or research capability; or expert services",
+"description": null,
+"active": true,
+"sortIndex": 4,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far4",
+"code": "far4",
+"value": "FAR 6.302-4 - International agreement",
+"description": null,
+"active": true,
+"sortIndex": 5,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far5",
+"code": "far5",
+"value": "FAR 6.302-5 - Authorized or required by statute",
+"description": null,
+"active": true,
+"sortIndex": 6,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far6",
+"code": "far6",
+"value": "FAR 6.302-6  - National security",
+"description": null,
+"active": true,
+"sortIndex": 7,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "far7",
+"code": "far7",
+"value": "FAR 6.302-7 - Public interest",
+"description": null,
+"active": true,
+"sortIndex": 8,
+"elements": null
 }
 ],
-"description": {
-"content": "string",
-"amendments": [
+"id": "ja_statutory_authority"
+},
 {
-"number": "int",
-"date": "ISO8601",
-"description": "string"
+"elements": [
+{
+"parentElementId": null,
+"elementId": "none",
+"code": "none",
+"value": "None",
+"description": "",
+"active": true,
+"sortIndex": 1,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "recovery_act",
+"code": "recovery_act",
+"value": "Recovery and Reinvestment Act",
+"description": "",
+"active": true,
+"sortIndex": 2,
+"elements": null
+}
+],
+"id": "additional_reporting"
+},
+{
+"elements": [
+{
+"parentElementId": null,
+"elementId": "1",
+"code": "1",
+"value": "Urgency",
+"description": null,
+"active": true,
+"sortIndex": 1,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "2",
+"code": "2",
+"value": "Only One Source (except brand name)",
+"description": null,
+"active": true,
+"sortIndex": 2,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "3",
+"code": "3",
+"value": "Follow-on Delivery Order Following Competitive Initial Order",
+"description": null,
+"active": true,
+"sortIndex": 3,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "4",
+"code": "4",
+"value": "Minimum Guarantee",
+"description": null,
+"active": true,
+"sortIndex": 4,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "5",
+"code": "5",
+"value": "Other Statutory Authority (e.g. 8a, etc.)",
+"description": null,
+"active": true,
+"sortIndex": 5,
+"elements": null
+}
+],
+"id": "fo_justification_authority"
+},
+{
+"elements": [
+{
+"parentElementId": null,
+"elementId": "far13",
+"code": "far13",
+"value": "FAR 13.5 - Simplified Procedures for One Source",
+"description": "",
+"active": true,
+"sortIndex": 1,
+"elements": null
+}
+],
+"id": "justification_aquisition_authority"
 }
 ]
 },
-"attachments": [
+"_links": {
+"self": {
+"href": "https://86samdotgovopportunitiesmodern.prod.apps-internal.prod-iae.bsp.gsa.gov/opps/v2/dictionaries?ids=fo_justification_authority%2Cadditional_reporting%2Cja_statutory_authority%2Cjustification_aquisition_authority\&ids=fo_justification_authority%2Cadditional_reporting%2Cja_statutory_authority%2Cjustification_aquisition_authority\&random=1745359044516"
+}
+}
+}
+
+```
+
+## API URL: `https://sam.gov/api/prod/opps/v2/opportunities/34752cf5d3cc47a09494515e014bb8da?random=1745359044519
+
+```
+
 {
-"url": "string",
-"name": "string",
-"type": "string",
-"size": "int"
+"data2": {
+"type": "k",
+"award": {},
+"naics": [
+{
+"code": [
+"335220"
+],
+"type": "primary"
+}
+],
+"title": "FY25 Dorm Furniture and Appliances",
+"archive": {
+"date": "2025-05-17",
+"type": "auto15"
+},
+"version": "2",
+"permissions": {
+"IVL": {
+"read": true,
+"create": true,
+"delete": true,
+"update": true
+}
+},
+"solicitation": {
+"setAside": "SBA",
+"deadlines": {
+"response": "2025-05-02T10:00:00-07:00",
+"responseTz": "America/Los_Angeles"
+}
+},
+"organizationId": "100242405",
+"pointOfContact": [
+{
+"fax": "",
+"type": "primary",
+"email": "nakia.hightower_clements@us.af.mil",
+"phone": "5092474872",
+"title": null,
+"fullName": "Nakía Hightower"
+},
+{
+"fax": "",
+"type": "secondary",
+"email": "benjamin.hampton.1@us.af.mil",
+"phone": "5092472234",
+"title": null,
+"fullName": "Benjamin Hampton"
+}
+],
+"classificationCode": "7290",
+"placeOfPerformance": {
+"zip": "99011",
+"city": {
+"code": "22955",
+"name": "Fairchild Air Force Base"
+},
+"state": {
+"code": "WA",
+"name": "Washington"
+},
+"country": {
+"code": "USA",
+"name": "UNITED STATES"
+}
+},
+"solicitationNumber": "FA462025QA937",
+"additionalReporting": [
+"none"
+]
+},
+"additionalInfo": {
+"sections": [
+{
+"id": "header",
+"status": "updated"
+},
+{
+"id": "general",
+"status": "updated"
+},
+{
+"id": "classification",
+"status": "updated"
+},
+{
+"id": "description",
+"status": "updated"
+},
+{
+"id": "attachments-links",
+"status": "updated"
+},
+{
+"id": "contact",
+"status": "updated"
 }
 ]
+},
+"parent": {
+"opportunityId": "e73215267d2f493f8c6c8e5ed8ca15ad"
+},
+"related": {},
+"status": {
+"code": "published",
+"value": "Published"
+},
+"archived": false,
+"cancelled": false,
+"latest": true,
+"deleted": false,
+"postedDate": "2025-04-22T21:40:13.286+00:00",
+"modifiedDate": "2025-04-22T21:40:13.290+00:00",
+"createdDate": "2025-04-22T21:30:28.551+00:00",
+"modifiedBy": "nakia.hightower_clements@us.af.mil",
+"createdBy": "nakia.hightower_clements@us.af.mil",
+"description": [
+{
+"opportunityId": "34752cf5d3cc47a09494515e014bb8da",
+"descriptionId": "81641911c86e4e83a5e4acae4d4282a8",
+"modifiedOn": "2025-04-22T21:40:13.291+00:00",
+"body": "<p>The contractor shall provide Dorm Furniture and Appliances, in accordance with the attached Statement of Work and deliver to Fairchild AFB, WA.<br>\n<br>\nProposal due date was extended until 2 May 2025 by 10:00 A.M. PST in Amedment 001. Please see the attached 25QA937 - Amend001 -  Combo.</p>\n"
 }
+],
+"totalCount": 1,
+"_links": {
+"self": {
+"href": "/opps/v2/opportunities/34752cf5d3cc47a09494515e014bb8da"
+},
+"opportunity:publish:latest": {
+"href": "/opps/v2/opportunities/34752cf5d3cc47a09494515e014bb8da"
+},
+"opportunity:previous": {
+"href": "/opps/v2/opportunities/7a5f8464a498455f99d5e01bc5c166f7"
+}
+},
+"opportunityId": "34752cf5d3cc47a09494515e014bb8da",
+"id": "34752cf5d3cc47a09494515e014bb8da"
 }
 
 ```
 
----
-
-## Installation
-
-### Prerequisites
-- Python 3.8 or higher  
-- SAM.gov API key ([request here](https://sam.gov/content/opportunities-api))
-
-### Setup
-
-```
-
-
-# Clone repository
-
-git clone https://github.com/yourrepo/sam-gov-data.git
-cd sam-gov-data
-
-# Create virtual environment
-
-python -m venv venv
-source venv/bin/activate  \# Linux/Mac
-.\venv\Scripts\activate   \# Windows
-
-# Install dependencies
-
-pip install -r requirements.txt
-
-# Configure environment variables
-
-cp .env.example .env
-
-# Edit .env to add your API key
-
-```
-
----
-
-## Usage
-
-### Basic Extraction
-
-```
-
-import json
-from sam_gov import SAMClient
-
-client = SAMClient(api_key="your_api_key")
-
-# Retrieve latest opportunities
-
-opportunities = client.search(
-posted_from="2025-01-01",
-limit=100,
-output_format="json"
-)
-
-# Save data to file
-
-with open("opportunities.json", "w") as f:
-json.dump(opportunities, f, indent=2)
-
-```
-
-### Advanced Filtering
-
-```
-
-filtered = client.search(
-naics="541511",
-set_aside=["SBA", "8A"],
-deadline_after="2025-05-01",
-sort_by="closeDate:asc"
-)
-
-```
-
----
-
-## API Documentation
-
-### Endpoints
-
-| Method | Endpoint                      | Description           |
-|--------|-------------------------------|-----------------------|
-| `GET`  | `/v1/opportunities`            | Search opportunities  |
-| `GET`  | `/v1/opportunities/{id}`       | Get specific opportunity |
-| `GET`  | `/v1/historical/{id}`           | Get version history   |
-
-### Rate Limits
-- 60 requests per minute  
-- 5,000 requests per day  
-
----
-
-## Field Reference
-
-### Key Fields
-
-| Field           | Type   | Description            | Sample               |
-|-----------------|--------|------------------------|----------------------|
-| `noticeId`      | String | Unique identifier      | `F1250525U0203`      |
-| `title`         | String | Opportunity title      | `FY25 IT Support Services` |
-| `type`          | Enum   | Notice type            | `Combined Synopsis/Solicitation` |
-| `naics.code`    | String | 6-digit NAICS code     | `541511`             |
-| `psc.code`      | String | 4-digit PSC code       | `D302`               |
-| `setAside`      | String | Contract preference    | `8(a) Set-Aside`     |
-
-### Date Fields
-All dates are in ISO 8601 format with timezone, e.g.:  
-- `2025-04-22T14:30:00-04:00` (EDT)  
-- `2025-04-22T18:30:00Z` (UTC)  
-
----
-
-## Examples
-
-### JSON Output Example
+## API URL: `https://sam.gov/api/prod/opps/v2/dictionaries?random=1745359044523&amp;ids=farcases_type
 
 ```
 
 {
-"noticeId": "F1250525U0203",
-"title": "Cybersecurity Support Services",
-"type": "Combined Synopsis/Solicitation",
-"postedDate": "2025-04-15T08:00:00-04:00",
-"closeDate": "2025-05-15T17:00:00-04:00",
-"classification": {
-"naics": {
-"code": "541511",
-"description": "Custom Computer Programming Services"
+"_embedded": {
+"dictionaries": [
+{
+"elements": [
+{
+"parentElementId": null,
+"elementId": "FAR 7.107-2",
+"code": "FAR 7.107-2",
+"value": "Intent to consolidate requirements",
+"description": "Determination that consolidation is necessary and justified with the publication of the solicitation in Description.",
+"active": true,
+"sortIndex": 1,
+"elements": null
 },
-"psc": {
-"code": "D302",
-"description": "IT and Telecom - Support Services"
+{
+"parentElementId": null,
+"elementId": "FAR 7.107-3",
+"code": "FAR 7.107-3",
+"value": "Intent to bundle requirements",
+"description": "Determination that bundling is necessary and justified with the publication of the solicitation in Description.",
+"active": true,
+"sortIndex": 2,
+"elements": null
+},
+{
+"parentElementId": null,
+"elementId": "FAR 7.107-4",
+"code": "FAR 7.107-4",
+"value": "Intent to substantially bundle requirements",
+"description": "Include the rationale for substantial bundling as part of the determination for bundling with the publication of the solicitation.",
+"active": true,
+"sortIndex": 3,
+"elements": null
+}
+],
+"id": "farcases_type"
+}
+]
+},
+"_links": {
+"self": {
+"href": "https://86samdotgovopportunitiesmodern.prod.apps-internal.prod-iae.bsp.gsa.gov/opps/v2/dictionaries?ids=farcases_type\&ids=farcases_type\&random=1745359044523"
 }
 }
 }
 
 ```
 
-### CSV Output Example
+## API URL: `https://sam.gov/api/prod/locationservices/v1/api/psc?random=1745359044851&amp;q=7290&amp;active=ALL&amp;advanceSearch=N&amp;searchby=psc&amp;asOfDate=2025-05-22
 
 ```
 
-noticeId,title,type,postedDate,closeDate,naicsCode,naicsDesc,pscCode,pscDesc
-F1250525U0203,Cybersecurity Support Services,Combined Synopsis/Solicitation,2025-04-15T08:00:00-04:00,2025-05-15T17:00:00-04:00,541511,Custom Computer Programming Services,D302,IT and Telecom - Support Services
+{
+"_embedded": {
+"productServiceCodeList": [
+{
+"pscId": 6966,
+"pscCode": "7290",
+"pscName": "MISCELLANEOUS HOUSEHOLD AND COMMERCIAL FURNISHINGS AND APPLIANCES",
+"pscFullName": "Miscellaneous Household and Commercial Furnishings and Appliances",
+"pscInclude": "Fireplace Sets; Vases and Urns; Household Sewing Machines.",
+"activeInd": "Y",
+"parentPscCode": "72 - HOUSEHOLD/COMMERC FURNISH/APPLIANCE",
+"activeStartDate": "2011-10-01",
+"updatedDate": "2024-04-30",
+"_links": {
+"self": {
+"href": "https://65locationservicesprod.apps.prod-iae.bsp.gsa.gov/locationservices/psc?searchby=psc\&q=7290"
+}
+}
+}
+]
+},
+"_links": {
+"self": {
+"href": "https://65locationservicesprod.apps.prod-iae.bsp.gsa.gov/locationservices/psc"
+}
+}
+}
 
 ```
 
----
-
-## Troubleshooting
-
-### Common Issues
-
-**API Limit Reached**  
-```
-
-try:
-response = client.search(...)
-except RateLimitError as e:
-print(f"Rate limit exceeded. Retry after {e.retry_after} seconds")
+## API URL: `https://sam.gov/api/prod/locationservices/v3/api/naics?random=1745359044853&amp;q=335220&amp;active=ALL&amp;asOfDate=2025-05-22&amp;size=6
 
 ```
 
-**Authentication Failure**  
-- Confirm your API key is valid  
-- Ensure the key is correctly set in `.env`  
-- Remove any trailing whitespace in the key  
+{
+"_embedded": {
+"nAICSList": [
+{
+"naicsId": 9862,
+"naicsCode": "335220",
+"naicsTitle": "Major Household Appliance Manufacturing ",
+"naicsSize": "6",
+"parentNaicsCode": "33522",
+"activeInd": "Y",
+"sourceYear": "2022",
+"_links": {
+"self": {
+"href": "https://65locationservicesprod.apps.prod-iae.bsp.gsa.gov/locationservices/v3/api/naics?sourceyear=2022\&code=335220"
+}
+}
+}
+]
+},
+"_links": {
+"self": {
+"href": "https://65locationservicesprod.apps.prod-iae.bsp.gsa.gov/locationservices/v3/api/naics{?sourceyear,code,asOfDate,q,size,active,setaside}",
+"templated": true
+}
+}
+}
 
-**Data Parsing Errors**  
-Enable debug mode for detailed logs:  
 ```
 
-client = SAMClient(debug=True)
+## API URL: `https://sam.gov/api/prod/locationservices/v1/api/setAside?random=1745359044855&amp;q=SBA&amp;organizationIds=&amp;active=ALL&amp;activeStartDate=&amp;activeEndDate=
 
 ```
 
----
-
-## License
-
-This project is not affiliated with the U.S. General Services Administration (GSA). SAM.gov data is public domain.
+{
+"_embedded": {
+"setAsideList": [
+{
+"setAsideId": 12,
+"setAsideCode": "SBA",
+"setAsideName": "Total Small Business Set-Aside (FAR 19.5)",
+"parentSetAsideCode": null,
+"active": "Y",
+"organizationIds": null,
+"sortIndex": 25,
+"legacyFBOCode": "7",
+"activeStartDate": null,
+"activeEndDate": null,
+"_links": {
+"self": {
+"href": "https://65"
+}
+}
+}
+]
+},
+"_links": {
+"self": {
+"href": "https://65locationservicesprod.apps.prod-iae.bsp.gsa.gov/locationservices/setAside{?q,organizationIds,active,activeStartDate,activeEndDate}",
+"templated": true
+}
+}
+}
 
 ```
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
-[Include full license text here]
-
-```
-
----
-
-## Contact
-
-For professional inquiries and custom development:
-
-- Email: [hasnain.abbas32@outlook.com](mailto:hasnain.abbas32@outlook.com)  
-- Alternate: [kingshah673@gmail.com](mailto:kingshah673@gmail.com)  
-- GitHub Issues: [https://github.com/yourrepo/issues](https://github.com/yourrepo/issues)  
-
----
-
-![Data Flow Diagram](https://example.com/path/to/diagram.png)  
-*Figure 1: SAM.gov Data Pipeline Architecture*
-```
-
-This version is formatted for direct use in GitHub README.md with clear sections, consistent indentation, code blocks, tables, and badges for a professional presentation.
 
 <div style="text-align: center">⁂</div>
 
-[^1_1]: https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/63773998/f56e4717-ecbe-4552-9f7f-fd35eba51658/paste.txt
-
-[^1_2]: https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/63773998/e6270ca7-6a31-428e-9d7d-679480a65378/paste-2.txt
-
-[^1_3]: https://img.shields.io/badge/SAM.gov-API-informational?style=flat\&logo=government\&logo
+[^1]: https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/63773998/7f679849-c04b-49b3-8771-8f707157d1cd/paste.txt```
 
