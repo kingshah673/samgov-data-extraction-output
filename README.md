@@ -4,7 +4,7 @@
 A Python-based web scraper that extracts procurement opportunities from [SAM.gov](https://sam.gov/) (System for Award Management) using hidden APIs.
 
 **Developer**: Syed Hasnain Abbas  
-**Email**: hasnain.abbas32@outlook.com | kingshha673@gmail.com  
+**Email**: hasnain.abbas32@outlook.com | kingshah673@gmail.com  
 **GitHub**: [kingshah673](https://github.com/kingshah673/)
 
 ---
